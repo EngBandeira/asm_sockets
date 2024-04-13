@@ -1,1 +1,1 @@
-# asm_sockets
+# A Static Library To Work With Sockets, Written in Assembly AT&T
