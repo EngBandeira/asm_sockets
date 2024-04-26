@@ -1,10 +1,20 @@
+.include "io.s"
 .include "syscalls.s"
 .data
+    .equ        AF_INET, 2
+    .equ        PORT, 3002
+
+    bind_msg: .asciz "Socket bound.\n"
     listen_msg: .asciz "Server listen.\n"
-    line_feed: .asciz "\n"
+    dbg: .asciz "Debug msg! "
+    address:
+        .short PORT
+        .short AF_INET
+        .int 0
+        .fill 0,8,0
 
 .text 
-.globl _start
+.globl      _start
 exit:
     mov     $SYS_exit, %rax
     mov     $0, %rdi
@@ -12,81 +22,77 @@ exit:
 
 sock:
     mov     $SYS_socket, %rax
-    mov     $2, %rdi 
+    mov     $AF_INET, %rdi # AF_INET
     mov     $1, %rsi
-    mov     $0,%rdx
+    mov     $0, %rdx
     syscall
     ret
 
-str_len:
-    mov     %rcx, %r13
-	xor     %rcx, %rcx
-    str_len_loop:
-        cmpb    $0, (%rsi, %rcx)
-        je      str_len_end
-        inc     %rcx
-        jmp     str_len_loop
-    str_len_end:
-        mov     %rcx, %rdx
-        mov     %r13, %rcx
-        xor     %r13, %r13
-        ret
+bind:
+# C Struct representation
+#
+#sizeof(sockaddr_in) = 16 
+#   sa_family_t 2
+#   in_port_t   2
+#   in_addr     4 
+#   void_bytes  8
 
-print:
-    mov $SYS_write, %rax
-	mov $1, %rdi
-    call str_len
+    push     %rbp
+    mov      %rsp, %rbp
+    sub      $8, %rsp
+
+    mov      $SYS_bind,   %rax
+    movw     $AF_INET,   (%rsp)
+    movw     $PORT, 2(%rsp)
+    movl     $0, 4(%rsp)
+    lea      (address), %rsi
+    mov      $16, %rdx
+    syscall
+    add      $8, %rsp
+    pop      %rbp
+    ret
+
+listen:
+    mov     $SYS_listen, %rax
+    mov     $2, %rsi
     syscall
     ret
 
-print_ln:
-
-    call print
-    mov %rsi, %r14
-    xor %rsi, %rsi
-    mov $line_feed, %rsi
-    call print
-    mov %r14, %rsi
-    xor %r14, %r14
+close_fd:
+    mov     $SYS_close, %rax
+    syscall
     ret
 
-
-print_number:# (2 ^ 32) - 1
-#               4294967295
+_start:
     
     push    %rbp
     mov     %rsp, %rbp
-    mov     %rdi, %rax
-    mov     %rbp, %rcx
-    sub     $20, %rsp
-    sub     $8, %rcx
-    # sub $20,%rsp # 8 bit inicio 12 data
-    print_loop:
-        xor     %edx, %edx
-        mov     $10, %ebx
-        div     %ebx # rax/ebx
-        mov     %rdx, %rdi
-        addb    $48 ,%dil        
-        movb    %dil, (%rcx)
-        dec     %rcx
+    sub     $0x20, %rsp
 
-        cmp     $0, %rax
-        jne     print_loop
-        je      print_final
+    call    sock # return value/eax/fd of socket
+    movq    %rax, (%rbp) # saving FD of socket
+    mov     %rax, %rdi
+    call    print_number
+    mov     (%rbp), %rdi # using FD of socket
+    call    bind
 
-    print_final:
-        inc     %rcx
-        lea     (%rcx), %rsi
-        call    print_ln
-        add     $20, %rsp
-        pop     %rbp
-        ret    
-
-    
-_start:
-
-    mov     $1333, %rdi
+    mov     %rax, %rdi
     call    print_number
     
-    
+    mov $bind_msg, %rsi
+    call print_ln
+
+    mov $listen_msg, %rsi
+    call print_ln
+
+    mov     (%rbp), %rdi # using FD of socket
+    call    listen
+    mov     %rax, %rdi
+    call    print_number
+
+    mov     (%rbp), %rdi # using FD of socket
+    call    close_fd
+
+    add     $0x20, %rsp
+    pop     %rbp
     jmp     exit

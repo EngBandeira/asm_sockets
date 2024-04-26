@@ -1,9 +1,13 @@
 	.file	"main.c"
 	.text
+	.section	.rodata
+.LC0:
+	.string	"az: %d \n"
+	.text
 	.globl	main
 	.type	main, @function
 main:
-.LFB0:
+.LFB6:
 	.cfi_startproc
 	pushq	%rbp
 	.cfi_def_cfa_offset 16
@@ -12,11 +16,16 @@ main:
 	.cfi_def_cfa_register 6
 	subq	$32, %rsp
 	movq	%fs:40, %rax
-	movq	%rax, -8(%rbp)# aloca 4 bytes para o rax
+	movq	%rax, -8(%rbp)
 	xorl	%eax, %eax
-	movl	$17 51 67 11 38, -13(%rbp) # aloca 6 bytes
-	movb	$0, -9(%rbp)
-	movl	$3, -20(%rbp)#int 
+	movw	$2, -32(%rbp)
+	movl	$0, -28(%rbp)
+	movw	$3001, -30(%rbp)
+	movl	$4, %esi
+	leaq	.LC0(%rip), %rax
+	movq	%rax, %rdi
+	movl	$0, %eax
+	call	printf@PLT
 	movl	$0, %eax
 	movq	-8(%rbp), %rdx
 	subq	%fs:40, %rdx
@@ -27,20 +36,7 @@ main:
 	.cfi_def_cfa 7, 8
 	ret
 	.cfi_endproc
-.LFE0:
+.LFE6:
 	.size	main, .-main
 	.ident	"GCC: (GNU) 13.2.1 20230801"
 	.section	.note.GNU-stack,"",@progbits
-# 8 rax 
-# 9	\
-# 10	\
-# 11	\
-# 12	\
-# 13	char[5] b
-# 14	\
-# 15	\
-# 16	\
-# 17	\
-# 18	\
-# 19	\
-# 20	int k
