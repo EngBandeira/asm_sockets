@@ -1,6 +1,6 @@
 .data    
     line_feed: .asciz "\n"
-    
+
 .text
 str_len:
     mov     %rcx, %r13

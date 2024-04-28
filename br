@@ -1,0 +1,3 @@
+as b.s -I./t -g -o b.o
+ld b.o -o b
+./b
