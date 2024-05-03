@@ -1,0 +1,4 @@
+
+as main.s -I../t -g -L -o main.o
+ld -o main main.o
+./main

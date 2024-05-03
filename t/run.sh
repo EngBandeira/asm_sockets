@@ -4,7 +4,7 @@
 
 rm main.o main
 as main.s -I. -g  -o main.o
-ld  main.o -o main
+ld  main.o -o main 
 ./main
 
 # as main.s  -g  -o main.o
