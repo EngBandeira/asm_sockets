@@ -4,15 +4,16 @@ srcP = src
 
 executable = $(buildP)/final
 
-source = $(shell find ./$(srcP) -path ./src/steps/utils/dontcompile -prune -o -name '*.s' -print)
+# source = $(shell find ./$(srcP) -path ./src/steps/utils/dontcompile -prune -o -name '*.s' -print)
 
+source = $(srcP)/main.s
 #objects = $(addprefix $(buildP), $(basename $(addprefix  $(dir $(source)), $(addsuffix .o , $(basename $(notdir $(source)))))))
 objects = $(subst $(srcP),$(buildP),$(addsuffix .o ,$(basename $(source))))
 
 
-flagsF = -I./$(includeP)
+flagsF = -I./$(srcP)
 
-flagsI = -I./$(includeP) -g 
+flagsI = -I./$(srcP) -g 
 
 CC = as
 
