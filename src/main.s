@@ -12,6 +12,7 @@
   listen_msg: .asciz "Server listen.\n"
   dbg:    .asciz "Debug msg! "
   path:     .asciz "/home/bandeira/Documents/GIT/asm_sockets/a.html",
+  no_args_msg:    .asciz "No args"
   buffer: .fill 128, 1
   address:
   .short AF_INET
@@ -102,13 +103,32 @@ print_err:
   mov   $SYS_exit,       %rax
   syscall
 
+no_args:
+  mov $no_args_msg, %rsi
+  call print_ln
+  mov SYS_exit, %rax
+  mov $-5, %rdi
+  syscall
 _start:
+  cmpq     $1, (%rsp)
+  jl no_args
+  
+  movq   8(%rsp), %r10
+
   push  %rbp
   mov   %rsp,            %rbp
-  sub   $0x20,           %rsp
+  sub   $0x30,           %rsp
+
+
+  mov   %r10, %rdi
+  call print_number
+  rorw    $8,        %di
+  lea     (address),   %rax
+  add     $2,        %rax
+  movw     %di,       (%rax)
 
   call  sock # return value/eax/fd of socket
-  movq  %rax,            (%rbp) # saving FD of socket
+  movq  %rax,            -8(%rbp) # saving FD of socket
   mov   %rax,            %rdi
   call  print_number
 
@@ -132,7 +152,7 @@ _start:
 
   mov   (%rbp),          %rdi # using FD of socket
   call  accept
-  mov   %rax,            -8(%rbp)# FD of the new socket
+  mov   %rax,            -16(%rbp)# FD of the new socket
   cmp   $0,              %rax
   jb    print_err
 
@@ -141,21 +161,21 @@ _start:
   mov   $0,              %rsi
   mov   $0,              %rdx
   call  open 
-  mov   %rax,            -16(%rbp)# saving FD the of file
+  mov   %rax,            -24(%rbp)# saving FD the of file
   cmp   $0,              %rax
   jb    print_err
 
 
-  mov   -16(%rbp),       %rdi
+  mov   -24(%rbp),       %rdi
   mov   $0,              %rsi
   mov   $SEEK_END,       %rdx
   mov   $SYS_lseek,      %rax
   syscall
-  mov   %rax,            -24(%rbp)# size the of file
+  mov   %rax,            -32(%rbp)# size the of file
   cmp   $0,              %rax
   jb    print_err
 
-  mov   -16(%rbp),       %rdi
+  mov   -24(%rbp),       %rdi
   mov   $0,              %rsi
   mov   $0,       %rdx
   mov   $SYS_lseek,      %rax
@@ -164,10 +184,10 @@ _start:
   jb    print_err
 
 
-  mov   -8(%rbp),              %rdi#out_fd, FD of the new socket
-  mov   -16(%rbp),       %rsi#in_fd, FD 0f the file
+  mov   -16(%rbp),              %rdi#out_fd, FD of the new socket
+  mov   -24(%rbp),       %rsi#in_fd, FD 0f the file
   mov   $0,              %rdx
-  mov   -24(%rbp),       %r10#size of the buffer
+  mov   -32(%rbp),       %r10#size of the buffer
   mov   $SYS_sendfile,   %rax
   syscall
   call  try_err
@@ -176,7 +196,7 @@ _start:
   mov   (%rbp),          %rdi # using FD of socket
   call  close_fd
 
-  add   $0x20,           %rsp
+  add   $0x30,           %rsp
   pop   %rbp
   jmp   exit
   

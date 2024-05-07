@@ -1,5 +1,6 @@
 .include "io.s"
 .include "syscalls.s"
+.include "math.s"
 .data
     .equ        SEEK_END,        2
     .equ        AF_INET,         2
@@ -26,7 +27,10 @@ exit:
     syscall
 
 _start:
-    movw $3002, %di
-    rorw $8, %di
-    call print_number
-    jmp exit
+    # call print_number
+    # mov (%rsp), %rdi
+    movq 16(%rsp), %rdi
+    # mov %rdi, %rsi
+    call print_ln
+    # call print_ln
+    jmp     exit

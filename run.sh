@@ -1,3 +1,3 @@
 rm build/*
 make
-./build/final
+./build/final 3001
